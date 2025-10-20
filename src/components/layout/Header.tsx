@@ -17,8 +17,9 @@ export function Header() {
       {/* Left: Logo and Search */}
       <div className="flex items-center space-x-6">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-lg">R</span>
+          <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center">
+            
+            <img src="../assets/images/logoRamp.jpg" alt="RAMP-BENIN" />
           </div>
           <span className="text-xl font-semibold text-heading-color">RAMP-BENIN</span>
         </div>
