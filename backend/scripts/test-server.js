@@ -14,17 +14,17 @@ app.get('/test', (req, res) => {
   });
 });
 
-// Test de connexion MongoDB
+// test de connexion MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => {
-    console.log('✅ MongoDB connecté');
+    console.log('MongoDB connecté');
     
     app.listen(PORT, () => {
-      console.log(`🚀 Serveur de test démarré sur http://localhost:${PORT}/test`);
-      console.log('💡 Testez avec: curl http://localhost:8080/test');
+      console.log(`Serveur de test démarré sur http://localhost:${PORT}/test`);
+      console.log('Testez avec: curl http://localhost:8080/test');
     });
   })
   .catch(error => {
-    console.error('❌ MongoDB erreur:', error.message);
+    console.error('MongoDB erreur:', error.message);
     process.exit(1);
   });

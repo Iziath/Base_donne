@@ -1,4 +1,5 @@
-import { Bell, Search, User, Settings } from "lucide-react";
+
+import { Bell, Search, User, Settings, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,16 +11,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/authcontext";
 
 export function Header() {
+  const { user, logout } = useAuth();
+
   return (
     <header className="h-header bg-card border-b border-border px-6 flex items-center justify-between">
       {/* Left: Logo and Search */}
       <div className="flex items-center space-x-6">
         <div className="flex items-center space-x-3">
           <div className="w-12 h-12 bg-gradient-primary rounded-lg flex items-center justify-center">
-            
-            <img src="../assets/images/logoRamp.jpg" alt="RAMP-BENIN" />
+            {/* <span className="text-xl font-bold text-white">R</span> */}
+            <img 
+              src="../assets/images/logoRamp.jpg" 
+              alt="RAMP-BENIN Logo" 
+            />
           </div>
           <span className="text-xl font-semibold text-heading-color">RAMP-BENIN</span>
         </div>
@@ -50,11 +57,21 @@ export function Header() {
               <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                 <User className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="text-sm font-medium">Admin RAMP</span>
+              <span className="text-sm font-medium">
+                {user ? `${user.prenom} ${user.nom}` : 'Utilisateur'}
+              </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              <div>
+                <p className="font-medium">{user?.prenom} {user?.nom}</p>
+                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Rôle: <span className="font-medium">{user?.role}</span>
+                </p>
+              </div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />
@@ -65,8 +82,12 @@ export function Header() {
               <span>Paramètres</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
-              Déconnexion
+            <DropdownMenuItem 
+              className="text-destructive focus:text-destructive"
+              onClick={logout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Déconnexion</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

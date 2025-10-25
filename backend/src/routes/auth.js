@@ -15,7 +15,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email et mot de passe requis' });
     }
 
-    // Recherche de l'utilisateur
+    // Recherche du User
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
@@ -64,7 +64,7 @@ router.post('/register', [auth, authorize('admin')], async (req, res) => {
       return res.status(400).json({ message: 'Un utilisateur avec cet email existe déjà' });
     }
 
-    // Créer le nouvel utilisateur
+    // Créer le nouveau user
     const user = new User({
       nom,
       prenom,

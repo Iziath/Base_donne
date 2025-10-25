@@ -7,21 +7,21 @@ const { auth } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Get dashboard statistics
+// Otenir statistiques du tableau de bord
 router.get('/stats', auth, async (req, res) => {
   try {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
 
-    // Projects stats
+    // satistique des projets
     const totalProjects = await Project.countDocuments();
     const activeProjects = await Project.countDocuments({ statut: 'en_cours' });
     const newProjectsThisMonth = await Project.countDocuments({
       createdAt: { $gte: startOfMonth }
     });
 
-    // Activities stats
+    // statistique des activités
     const totalActivities = await Activity.countDocuments();
     const activitiesThisMonth = await Activity.countDocuments({
       dateDebut: { $gte: startOfMonth }
@@ -30,19 +30,19 @@ router.get('/stats', auth, async (req, res) => {
       dateDebut: { $gte: startOfDay }
     });
 
-    // Beneficiaries stats
+    // statistique des bénéficiaires
     const totalBeneficiaries = await Beneficiary.countDocuments();
 
-    // Team stats
+    // statistique des membres de l'équipe
     const totalTeamMembers = await User.countDocuments({ statut: 'actif' });
 
-    // Recent activities
+    // Activités récentes
     const recentActivities = await Activity.find()
       .populate('projet', 'nom')
       .sort({ dateDebut: -1 })
       .limit(5);
 
-    // Projects progress
+    // Progession des projets
     const projectsProgress = await Project.find({ statut: 'en_cours' })
       .select('nom progression budget beneficiairesCibles statut')
       .sort({ progression: -1 })

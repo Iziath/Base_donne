@@ -1,6 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const User = require('../src/models/User'); // Correction du chemin
+const User = require('../src/models/User'); 
 
 const createAdmin = async () => {
   try {
@@ -10,11 +10,11 @@ const createAdmin = async () => {
     // Vérifier si un admin existe déjà
     const existingAdmin = await User.findOne({ role: 'admin' });
     if (existingAdmin) {
-      console.log('⚠️  Un administrateur existe déjà:', existingAdmin.email);
+      console.log(' Un administrateur existe déjà:', existingAdmin.email);
       process.exit(0);
     }
 
-    // Créer l'admin
+    // Création de l'admin
     const admin = new User({
       nom: 'Admin',
       prenom: 'RAMP',
@@ -25,13 +25,13 @@ const createAdmin = async () => {
     });
 
     await admin.save();
-    console.log('✅ Administrateur créé avec succès!');
-    console.log('📧 Email: admin@ramp-benin.org');
-    console.log('🔑 Mot de passe: admin123');
-    console.log('⚠️  Changez le mot de passe après la première connexion!');
+    console.log('Administrateur créé avec succès!');
+    console.log('Email: admin@ramp-benin.org');
+    console.log('Mot de passe: admin123');
+    console.log('Changez le mot de passe après la première connexion!');
 
   } catch (error) {
-    console.error('❌ Erreur:', error.message);
+    console.error('Erreur:', error.message);
   } finally {
     await mongoose.connection.close();
   }

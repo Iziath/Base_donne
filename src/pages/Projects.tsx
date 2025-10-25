@@ -1,9 +1,13 @@
+
+import { useEffect, useState } from 'react';
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import projectService, { Project } from '@/services/projectservice';
+import { toast } from '@/hooks/use-toast';
 import { 
   Plus, 
   Search, 
@@ -15,7 +19,8 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,73 +29,81 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const projects = [
-  {
-    id: 1,
-    name: "AgriTech 2024",
-    description: "Modernisation de l'agriculture locale avec introduction de techniques durables",
-    status: "En cours",
-    progress: 78,
-    startDate: "Jan 2024",
-    endDate: "Mar 2024",
-    budget: "50,000€",
-    location: "Cotonou, Parakou",
-    beneficiaries: 500,
-    responsible: "Marie Kone",
-    activities: 12,
-  },
-  {
-    id: 2,
-    name: "Santé pour Tous",
-    description: "Amélioration de l'accès aux soins de santé primaires",
-    status: "En cours",
-    progress: 45,
-    startDate: "Fév 2024",
-    endDate: "Juin 2024",
-    budget: "75,000€",
-    location: "Porto-Novo, Abomey",
-    beneficiaries: 1200,
-    responsible: "Dr. Jean Mensah",
-    activities: 8,
-  },
-  {
-    id: 3,
-    name: "Éducation Communautaire",
-    description: "Programme de formation et d'alphabétisation des adultes",
-    status: "Finalisation",
-    progress: 92,
-    startDate: "Oct 2023",
-    endDate: "Jan 2024",
-    budget: "30,000€",
-    location: "Natitingou",
-    beneficiaries: 300,
-    responsible: "Fatou Diallo",
-    activities: 15,
-  },
-  {
-    id: 4,
-    name: "Entrepreneuriat Féminin",
-    description: "Accompagnement des femmes entrepreneurs",
-    status: "En attente",
-    progress: 0,
-    startDate: "Mar 2024",
-    endDate: "Sept 2024",
-    budget: "40,000€",
-    location: "Bohicon, Savalou",
-    beneficiaries: 200,
-    responsible: "Aïcha Koffi",
-    activities: 0,
-  },
-];
-
 const statusColors = {
-  "En cours": "bg-info text-white",
-  "Finalisation": "bg-warning text-white",
-  "Terminé": "bg-success text-white",
-  "En attente": "bg-muted text-muted-foreground",
+  "en_cours": "bg-info text-white",
+  "planifie": "bg-secondary text-white",
+  "termine": "bg-success text-white",
+  "suspendu": "bg-warning text-white",
+  "annule": "bg-destructive text-white",
+};
+
+const statusLabels = {
+  "en_cours": "En cours",
+  "planifie": "Planifié",
+  "termine": "Terminé",
+  "suspendu": "Suspendu",
+  "annule": "Annulé",
 };
 
 const Projects = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const data = await projectService.getAll();
+      setProjects(data);
+    } catch (error: unknown) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de charger les projets",
+        variant: "destructive",
+      });
+      console.error('Error fetching projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) return;
+    
+    try {
+      await projectService.delete(id);
+      setProjects(projects.filter(p => p._id !== id));
+      toast({
+        title: "Succès",
+        description: "Projet supprimé avec succès",
+      });
+    } catch (error: unknown) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de supprimer le projet",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredProjects = projects.filter(project =>
+    project.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    project.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-96">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="space-y-6">
@@ -117,6 +130,8 @@ const Projects = () => {
                 <Input 
                   placeholder="Rechercher un projet..." 
                   className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               <Button variant="outline">
@@ -128,93 +143,96 @@ const Projects = () => {
         </Card>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {projects.map((project) => (
-            <Card key={project.id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between">
+        {filteredProjects.length === 0 ? (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <p className="text-muted-foreground">Aucun projet trouvé</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredProjects.map((project) => (
+              <Card key={project._id} className="hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <CardTitle className="text-lg">{project.nom}</CardTitle>
+                      <p className="text-sm text-muted-foreground">
+                        {project.description || 'Aucune description'}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge className={statusColors[project.statut || 'planifie']}>
+                        {statusLabels[project.statut || 'planifie']}
+                      </Badge>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon">
+                            <MoreVertical className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <Eye className="mr-2 h-4 w-4" />
+                            Voir détails
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            <Edit className="mr-2 h-4 w-4" />
+                            Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive"
+                            onClick={() => project._id && handleDelete(project._id)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Supprimer
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Progress */}
                   <div className="space-y-2">
-                    <CardTitle className="text-lg">{project.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">
-                      {project.description}
-                    </p>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground">Progression</span>
+                      <span className="font-medium">{project.progression || 0}%</span>
+                    </div>
+                    <Progress value={project.progression || 0} className="h-2" />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge className={statusColors[project.status]}>
-                      {project.status}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <Eye className="mr-2 h-4 w-4" />
-                          Voir détails
-                        </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Modifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Supprimer
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Progress */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Progression</span>
-                    <span className="font-medium">{project.progress}%</span>
-                  </div>
-                  <Progress value={project.progress} className="h-2" />
-                </div>
 
-                {/* Project Info */}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      <span>{project.startDate} - {project.endDate}</span>
+                  {/* Project Info */}
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <Calendar className="w-4 h-4" />
+                        <span>
+                          {new Date(project.dateDebut).toLocaleDateString('fr-FR')}
+                          {project.dateFin && ` - ${new Date(project.dateFin).toLocaleDateString('fr-FR')}`}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <MapPin className="w-4 h-4" />
+                        <span>{project.localisation?.ville || 'Non spécifié'}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{project.location}</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{project.budget?.toLocaleString()} {project.devise || 'EUR'}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <Users className="w-4 h-4" />
+                        <span>{project.beneficiairesCibles || 0} bénéficiaires</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-muted-foreground">
-                      <DollarSign className="w-4 h-4" />
-                      <span>{project.budget}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      <span>{project.beneficiaries} bénéficiaires</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Responsible and Activities */}
-                <div className="flex items-center justify-between pt-2 border-t border-border">
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Responsable: </span>
-                    <span className="font-medium">{project.responsible}</span>
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {project.activities} activités
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </Layout>
   );

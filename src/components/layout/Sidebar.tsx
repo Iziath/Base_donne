@@ -61,7 +61,7 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <div className={cn("w-sidebar bg-sidebar-background border-r border-sidebar-border", className)}>
       <div className="flex flex-col h-full">
-        {/* Navigation Menu */}
+        {/* Menu */}
         <nav className="flex-1 px-4 py-6 space-y-6">
           {menuItems.map((section, sectionIndex) => (
             <div key={sectionIndex} className="space-y-2">
